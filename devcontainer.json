@@ -1,0 +1,21 @@
+{
+  "name": "Crypto ETL Pipeline",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "pip install -r requirements.txt -q && echo '✓ Dependencies installed'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-toolsai.jupyter",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "mechatroner.rainbow-csv"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "jupyter.notebookFileRoot": "${workspaceFolder}/notebooks"
+      }
+    }
+  },
+  "forwardPorts": [8080],
+  "remoteUser": "vscode"
+}
