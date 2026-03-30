@@ -39,29 +39,41 @@ CoinGecko API (free tier)
 | `global_market_stats` | 1 | `total_market_cap_usd`, `btc_dominance_pct` |
 | `pipeline_run_log` | 1 | `run_id`, `status`, `records_loaded` |
 
-## Quick start (SQLite — no Docker needed)
+## Quick start — GitHub Codespaces
+
+The fastest way to run this project is directly in your browser via GitHub Codespaces.
+The `.devcontainer` config installs all dependencies automatically on launch.
+
+1. Push this repo to GitHub
+2. Click **Code → Codespaces → Create codespace on main**
+3. Wait ~60s for the environment to build
+4. Open `notebooks/04_pipeline_end_to_end.ipynb` and run all cells
+
+No local Python install, no Docker, no configuration needed.
+
+## Notebooks
+
+Each stage of the pipeline has a dedicated notebook. Run them in order to step through
+the full ETL, or jump straight to `04` for a single end-to-end execution.
+
+| Notebook | Description |
+|---|---|
+| `01_extract.ipynb` | Call the CoinGecko API, inspect raw JSON, print a live price table |
+| `02_transform.ipynb` | Clean nulls, normalize timestamps, compute volatility scores, verify null safety |
+| `03_load.ipynb` | Bootstrap SQLite schema, upsert records, run sample queries against the DB |
+| `04_pipeline_end_to_end.ipynb` | Full pipeline in one shot — the recommended starting point |
+
+To run locally:
 
 ```bash
-# 1. Install dependencies
 pip install -r requirements.txt
-
-# 2. Run the full pipeline once
-python -c "
-from etl.extract import fetch_market_data, fetch_global_stats
-from etl.transform import transform_market_data, transform_global_stats
-from etl.load import bootstrap_schema, load_coin_prices, load_global_stats
-
-bootstrap_schema()
-load_coin_prices(transform_market_data(fetch_market_data()))
-load_global_stats(transform_global_stats(fetch_global_stats()))
-print('Done! DB at data/crypto_market.db')
-"
-
-# 3. Run tests
-pytest tests/ -v
+jupyter lab notebooks/
 ```
 
 ## Full stack (Airflow + PostgreSQL via Docker)
+
+The `dags/` folder contains the production Airflow DAG that mirrors the notebook logic.
+Use this when you're ready to schedule automated runs against a real PostgreSQL instance.
 
 ```bash
 # Spin everything up
@@ -79,16 +91,23 @@ docker compose down -v
 
 ```
 crypto-etl-pipeline/
+├── notebooks/
+│   ├── 01_extract.ipynb               # CoinGecko API client walkthrough
+│   ├── 02_transform.ipynb             # Cleaning, validation, derived metrics
+│   ├── 03_load.ipynb                  # SQLite schema, upserts, queries
+│   └── 04_pipeline_end_to_end.ipynb  # Full E2E run — start here
 ├── dags/
-│   └── crypto_market_etl_dag.py  # Airflow DAG definition
+│   └── crypto_market_etl_dag.py      # Airflow DAG (production scheduling)
 ├── etl/
-│   ├── extract.py                 # CoinGecko API client
-│   ├── transform.py               # Cleaning + enrichment
-│   └── load.py                    # DB upsert logic
+│   ├── extract.py                     # CoinGecko API client (module)
+│   ├── transform.py                   # Cleaning + enrichment (module)
+│   └── load.py                        # DB upsert logic (module)
 ├── tests/
-│   └── test_transform.py          # 12 pytest unit tests
+│   └── test_transform.py              # 12 pytest unit tests
 ├── config/
-│   └── init_crypto_db.sql         # PostgreSQL bootstrap
+│   └── init_crypto_db.sql             # PostgreSQL bootstrap
+├── .devcontainer/
+│   └── devcontainer.json              # GitHub Codespaces config
 ├── docker-compose.yml
 ├── requirements.txt
 └── README.md
